@@ -3,7 +3,7 @@ package generator
 import (
 	"io"
 
-	"to-struct/internal/options"
+	"github.com/netscrawler/to-struct/internal/options"
 )
 
 type Generator interface {

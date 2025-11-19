@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"to-struct/internal/options"
-
+	"github.com/netscrawler/to-struct/internal/options"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/twpayne/go-jsonstruct/v3"
 )
@@ -20,8 +19,10 @@ func (g *TOMLGenerator) Generate(input io.Reader, opts *options.Options) ([]byte
 		return nil, fmt.Errorf("failed to read TOML input: %w", err)
 	}
 
-	var tomlData interface{}
-	if err := toml.Unmarshal(data, &tomlData); err != nil {
+	var tomlData any
+
+	err = toml.Unmarshal(data, &tomlData)
+	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal TOML: %w", err)
 	}
 
@@ -33,7 +34,8 @@ func (g *TOMLGenerator) Generate(input io.Reader, opts *options.Options) ([]byte
 	generatorOptions := g.buildOptions(opts)
 	generator := jsonstruct.NewGenerator(generatorOptions...)
 
-	if err := generator.ObserveJSONReader(bytes.NewReader(jsonData)); err != nil {
+	err = generator.ObserveJSONReader(bytes.NewReader(jsonData))
+	if err != nil {
 		return nil, err
 	}
 
@@ -66,8 +68,9 @@ func (g *TOMLGenerator) buildOptions(opts *options.Options) []jsonstruct.Generat
 		generatorOptions = append(generatorOptions, jsonstruct.WithOmitEmptyTags(jsonstruct.OmitEmptyTagsAuto))
 	}
 
-	generatorOptions = append(generatorOptions, jsonstruct.WithTypeName(opts.TypeName))
-	generatorOptions = append(generatorOptions, jsonstruct.WithPackageName(opts.PackageName))
+	generatorOptions = append(generatorOptions,
+		jsonstruct.WithTypeName(opts.TypeName),
+		jsonstruct.WithPackageName(opts.PackageName))
 
 	return generatorOptions
 }

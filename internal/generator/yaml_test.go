@@ -4,10 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"to-struct/internal/options"
+	"github.com/netscrawler/to-struct/internal/options"
 )
 
 func TestYAMLGenerator_Generate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -59,7 +61,7 @@ email: john@example.com`,
 			checks:  []string{"type Store struct", "Items", "[]struct", "Name", "Price"},
 		},
 		{
-			name: "with custom package",
+			name:  "with custom package",
 			input: `name: Test`,
 			opts: &options.Options{
 				TypeName:       "Model",
@@ -79,11 +81,14 @@ email: john@example.com`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			g := &YAMLGenerator{}
 			result, err := g.Generate(strings.NewReader(tt.input), tt.opts)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 
@@ -92,9 +97,14 @@ email: john@example.com`,
 			}
 
 			resultStr := string(result)
+
 			for _, check := range tt.checks {
 				if !strings.Contains(resultStr, check) {
-					t.Errorf("Generate() result missing expected string: %q\nGot:\n%s", check, resultStr)
+					t.Errorf(
+						"Generate() result missing expected string: %q\nGot:\n%s",
+						check,
+						resultStr,
+					)
 				}
 			}
 		})

@@ -14,13 +14,13 @@ A powerful CLI tool for generating Go struct definitions from various data forma
 ## Installation
 
 ```bash
-go install github.com/yourusername/to-struct/cmd/to-struct@latest
+go install github.com/netscrawler/to-struct/cmd/to-struct@latest
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/yourusername/to-struct.git
+git clone https://github.com/netscrawler/to-struct.git
 cd to-struct
 make build
 ```
@@ -47,7 +47,7 @@ to-struct -f toml -i config.toml -t Settings
 
 ```bash
 # Read from stdin
-cat data.json | to-struct -f json --stdin -t User
+cat data.json | to-struct -f json -t User
 
 # Specify package name
 to-struct -f json -i input.json -t User -p models
@@ -67,11 +67,10 @@ to-struct -f json -i input.json -t User --omitempty
 | Flag | Short | Description | Default |
 |------|-------|-------------|---------|
 | `--format` | `-f` | Input format: json, yaml, xml, toml | (required) |
-| `--input` | `-i` | Input file path | |
+| `--input` | `-i` | Input file path (if not specified, reads from stdin) | |
 | `--output` | `-o` | Output file path | stdout |
 | `--type` | `-t` | Name of the generated type | Root |
 | `--package` | `-p` | Package name for generated code | main |
-| `--stdin` | | Read from stdin instead of file | false |
 | `--tags` | | Struct tags to generate (comma-separated) | format-specific |
 | `--omitempty` | | Add omitempty to all tags | false |
 | `--skip-unparsable` | | Skip unparsable properties | true |
@@ -180,7 +179,10 @@ type Settings struct {
 ### Example 4: Using Stdin Pipeline
 
 ```bash
-curl -s https://api.example.com/user/1 | to-struct -f json --stdin -t User -p models
+curl -s https://api.example.com/user/1 | to-struct -f json -t User -p models
+
+# Or with echo
+echo '{"id": 123, "status": "active"}' | to-struct -f json -t Status
 ```
 
 ## How It Works

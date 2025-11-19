@@ -4,10 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"to-struct/internal/options"
+	"github.com/netscrawler/to-struct/internal/options"
 )
 
 func TestTOMLGenerator_Generate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -71,11 +73,14 @@ price = 200`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			g := &TOMLGenerator{}
 			result, err := g.Generate(strings.NewReader(tt.input), tt.opts)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 
@@ -84,9 +89,14 @@ price = 200`,
 			}
 
 			resultStr := string(result)
+
 			for _, check := range tt.checks {
 				if !strings.Contains(resultStr, check) {
-					t.Errorf("Generate() result missing expected string: %q\nGot:\n%s", check, resultStr)
+					t.Errorf(
+						"Generate() result missing expected string: %q\nGot:\n%s",
+						check,
+						resultStr,
+					)
 				}
 			}
 		})

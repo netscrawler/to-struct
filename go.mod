@@ -1,4 +1,4 @@
-module to-struct
+module github.com/netscrawler/to-struct
 
 go 1.25.3
 

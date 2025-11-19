@@ -1,14 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"to-struct/internal/generator"
-	"to-struct/internal/options"
-
+	"github.com/netscrawler/to-struct/internal/generator"
+	"github.com/netscrawler/to-struct/internal/options"
 	"github.com/spf13/cobra"
 )
 
@@ -28,28 +28,31 @@ func init() {
 	rootCmd.Flags().
 		StringVarP(&opts.Format, "format", "f", "", "Input format: json, yaml, xml, toml (required)")
 	rootCmd.Flags().
-		StringVarP(&opts.Input, "input", "i", "", "Input file path (use --stdin to read from stdin)")
+		StringVarP(&opts.Input, "input", "i", "", "Input file path (default: reads from stdin)")
 	rootCmd.Flags().
 		StringVarP(&opts.Output, "output", "o", "", "Output file path (default: stdout)")
 	rootCmd.Flags().StringVarP(&opts.TypeName, "type", "t", "Root", "Name of the generated type")
 	rootCmd.Flags().
 		StringVarP(&opts.PackageName, "package", "p", "main", "Package name for generated code")
-	rootCmd.Flags().BoolVar(&opts.UseStdin, "stdin", false, "Read from stdin instead of file")
 	rootCmd.Flags().
 		StringSliceVar(&opts.Tags, "tags", []string{}, "Struct tags to generate (comma-separated: json,xml,yaml,toml)")
 	rootCmd.Flags().BoolVar(&opts.OmitEmpty, "omitempty", false, "Add omitempty to all tags")
 	rootCmd.Flags().
 		BoolVar(&opts.SkipUnparsable, "skip-unparsable", true, "Skip unparsable properties")
 
-	rootCmd.MarkFlagRequired("format")
+	err := rootCmd.MarkFlagRequired("format")
+	if err != nil {
+		panic(err)
+	}
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func run(_ *cobra.Command, _ []string) error {
 	if opts.Format == "" {
-		return fmt.Errorf("format is required")
+		return errors.New("format is required")
 	}
 
 	var input io.Reader
+
 	if opts.Input == "" {
 		input = os.Stdin
 	} else {
@@ -57,11 +60,19 @@ func run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to open input file: %w", err)
 		}
-		defer file.Close()
+
+		defer func() {
+			closeErr := file.Close()
+			if closeErr != nil {
+				fmt.Fprintf(os.Stderr, "warning: failed to close file: %v\n", closeErr)
+			}
+		}()
+
 		input = file
 	}
 
 	factory := generator.NewGeneratorFactory()
+
 	gen := factory.GetGenerator(strings.ToLower(opts.Format))
 	if gen == nil {
 		return fmt.Errorf("unsupported format: %s", opts.Format)
@@ -73,9 +84,13 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if opts.Output == "" {
-		fmt.Print(string(result))
+		_, err = os.Stdout.Write(result)
+		if err != nil {
+			return fmt.Errorf("failed to write to stdout: %w", err)
+		}
 	} else {
-		if err := os.WriteFile(opts.Output, result, 0o644); err != nil {
+		err := os.WriteFile(opts.Output, result, 0o600)
+		if err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 	}
@@ -84,7 +99,8 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 func main() {
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		os.Exit(1)
 	}
 }

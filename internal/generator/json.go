@@ -3,8 +3,7 @@ package generator
 import (
 	"io"
 
-	"to-struct/internal/options"
-
+	"github.com/netscrawler/to-struct/internal/options"
 	"github.com/twpayne/go-jsonstruct/v3"
 )
 
@@ -14,7 +13,8 @@ func (g *JSONGenerator) Generate(input io.Reader, opts *options.Options) ([]byte
 	generatorOptions := g.buildOptions(opts)
 	generator := jsonstruct.NewGenerator(generatorOptions...)
 
-	if err := generator.ObserveJSONReader(input); err != nil {
+	err := generator.ObserveJSONReader(input)
+	if err != nil {
 		return nil, err
 	}
 
@@ -47,8 +47,9 @@ func (g *JSONGenerator) buildOptions(opts *options.Options) []jsonstruct.Generat
 		generatorOptions = append(generatorOptions, jsonstruct.WithOmitEmptyTags(jsonstruct.OmitEmptyTagsAuto))
 	}
 
-	generatorOptions = append(generatorOptions, jsonstruct.WithTypeName(opts.TypeName))
-	generatorOptions = append(generatorOptions, jsonstruct.WithPackageName(opts.PackageName))
+	generatorOptions = append(generatorOptions,
+		jsonstruct.WithTypeName(opts.TypeName),
+		jsonstruct.WithPackageName(opts.PackageName))
 
 	return generatorOptions
 }

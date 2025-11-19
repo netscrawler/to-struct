@@ -4,10 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"to-struct/internal/options"
+	"github.com/netscrawler/to-struct/internal/options"
 )
 
 func TestJSONGenerator_Generate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		input   string
@@ -100,11 +102,14 @@ func TestJSONGenerator_Generate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			g := &JSONGenerator{}
 			result, err := g.Generate(strings.NewReader(tt.input), tt.opts)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 
@@ -113,9 +118,14 @@ func TestJSONGenerator_Generate(t *testing.T) {
 			}
 
 			resultStr := string(result)
+
 			for _, check := range tt.checks {
 				if !strings.Contains(resultStr, check) {
-					t.Errorf("Generate() result missing expected string: %q\nGot:\n%s", check, resultStr)
+					t.Errorf(
+						"Generate() result missing expected string: %q\nGot:\n%s",
+						check,
+						resultStr,
+					)
 				}
 			}
 		})
@@ -123,6 +133,8 @@ func TestJSONGenerator_Generate(t *testing.T) {
 }
 
 func TestJSONGenerator_BuildOptions(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		opts *options.Options
@@ -147,7 +159,10 @@ func TestJSONGenerator_BuildOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			g := &JSONGenerator{}
+
 			result := g.buildOptions(tt.opts)
 			if len(result) != tt.want {
 				t.Errorf("buildOptions() returned %d options, want %d", len(result), tt.want)
